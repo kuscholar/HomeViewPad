@@ -1,0 +1,42 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceName": "iPad Pro 11-inch (M5)",
+        "modelName": "iPad Pro 11-inch (M5)",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 53,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "HomePad \u00b7 Built with macOS 27.0.1",
+  "expectedFailures": 0,
+  "failedTests": 0,
+  "finishTime": 1792114988.658,
+  "passedTests": 53,
+  "result": "Passed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1792114171.441,
+  "statistics": [],
+  "testFailures": [],
+  "title": "Test - HomePad",
+  "topInsights": [
+    {
+      "category": "Longest Test Runs",
+      "impact": "98% of duration",
+      "text": "2 longest test runs with outlier durations exceeding 2.91s (three standard deviations)"
+    }
+  ],
+  "totalTestCount": 53
+}

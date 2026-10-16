@@ -7,12 +7,13 @@ private let ink = Color(red: 0.36, green: 0.35, blue: 0.39)
 private let lavender = Color(red: 0.78, green: 0.76, blue: 0.88)
 private let paper = Color.white
 
-enum Panel: String, Identifiable { case settings, music, agenda, camera, controls, photos, accessory, weather; var id: String { rawValue } }
+enum Panel: String, Identifiable { case settings, music, agenda, camera, controls, photos, accessory, weather, standby; var id: String { rawValue } }
 struct Dashboard: View {
     @StateObject private var home = HomeStore()
     @StateObject private var personal = PersonalStore()
     @StateObject private var audio = AudioStore()
     @StateObject private var photos = PhotoLibraryStore()
+    @StateObject private var standby = StandbyStore()
     @StateObject private var weatherLocation = WeatherLocation()
     @StateObject private var weather = WeatherStore(demo: ProcessInfo.processInfo.arguments.contains("--demo") || (!ProcessInfo.processInfo.arguments.contains("--fresh") && UserDefaults.standard.string(forKey: "homeMode") == "demo"))
     @Environment(\.scenePhase) private var phase
@@ -38,43 +39,58 @@ struct Dashboard: View {
             let side = max(1, min(geometry.size.width, geometry.size.height) - 16)
             let landscape = geometry.size.width > geometry.size.height
             ZStack {
-                AmbientWallpaper(teal: tealWallpaper).ignoresSafeArea()
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: tealWallpaper)
-                if page == .overview { Color.black.ignoresSafeArea().allowsHitTesting(false).transition(.opacity) }
-                // Only uncovered wallpaper receives taps. Widget taps retain their own actions.
-                Color.clear.contentShape(Rectangle())
-                    .onTapGesture(perform: toggleNavigation)
-                    .accessibilityLabel("Show navigation").accessibilityAddTraits(.isButton)
-                    .accessibilityIdentifier("navigationBackdrop")
                 ZStack {
-                    Group {
-                        if page == .photos {
-                            PhotoWall(photos: photos, demoDate: home.demo ? demoDate : nil, navigationVisible: navigationVisible,
-                                      chooseAlbum: { panel = .photos }, showNavigation: toggleNavigation)
-                        } else { pageContent(side: side).frame(width: side, height: side) }
-                    }.frame(width: geometry.size.width, height: geometry.size.height)
-                        .id(page).transition(pageTransition)
-                }.frame(width: geometry.size.width, height: geometry.size.height).clipped()
-                    .accessibilityAction(named: "Show navigation") { withAnimation(navigationAnimation) { navigationVisible = true } }
-                    .accessibilityAction(named: "Next page") { movePage(forward: true) }
-                    .accessibilityAction(named: "Previous page") { movePage(forward: false) }
-                if navigationVisible {
-                    if landscape {
-                        HStack {
-                            Spacer(minLength: 0)
-                            navigationRail.frame(width: 142).frame(maxHeight: geometry.size.height - 28)
-                        }.padding(.trailing, 14)
-                            .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
-                    } else {
-                        VStack {
-                            Spacer(minLength: 0)
-                            bottomNavigation.frame(maxWidth: 760).padding(.horizontal, 16).padding(.bottom, max(18, geometry.safeAreaInsets.bottom))
-                        }.transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                    AmbientWallpaper(teal: tealWallpaper).ignoresSafeArea()
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: tealWallpaper)
+                    if page == .overview { Color.black.ignoresSafeArea().allowsHitTesting(false).transition(.opacity) }
+                    // Only uncovered wallpaper receives taps. Widget taps retain their own actions.
+                    Color.clear.contentShape(Rectangle())
+                        .onTapGesture(perform: toggleNavigation)
+                        .accessibilityLabel("Show navigation").accessibilityAddTraits(.isButton)
+                        .accessibilityIdentifier("navigationBackdrop")
+                    ZStack {
+                        Group {
+                            if page == .photos {
+                                PhotoWall(photos: photos, demoDate: home.demo ? demoDate : nil, navigationVisible: navigationVisible,
+                                          chooseAlbum: { panel = .photos }, showNavigation: toggleNavigation)
+                            } else { pageContent(side: side).frame(width: side, height: side) }
+                        }.frame(width: geometry.size.width, height: geometry.size.height)
+                            .id(page).transition(pageTransition)
+                    }.frame(width: geometry.size.width, height: geometry.size.height).clipped()
+                        .accessibilityAction(named: "Show navigation") { withAnimation(navigationAnimation) { navigationVisible = true } }
+                        .accessibilityAction(named: "Next page") { movePage(forward: true) }
+                        .accessibilityAction(named: "Previous page") { movePage(forward: false) }
+                    if navigationVisible {
+                        if landscape {
+                            HStack {
+                                Spacer(minLength: 0)
+                                navigationRail.frame(width: 142).frame(maxHeight: geometry.size.height - 28)
+                            }.padding(.trailing, 14)
+                                .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+                        } else {
+                            VStack {
+                                Spacer(minLength: 0)
+                                bottomNavigation.frame(maxWidth: 760).padding(.horizontal, 16).padding(.bottom, max(18, geometry.safeAreaInsets.bottom))
+                            }.transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                        }
                     }
+                }.allowsHitTesting(!standby.dimmed).accessibilityHidden(standby.dimmed)
+                if standby.dimmed { standbySurface }
+                else if standby.enabled, let issue = standby.setupIssue, page != .settings {
+                    VStack {
+                        Spacer()
+                        Button { panel = .standby } label: {
+                            Label(issue, systemImage: "exclamationmark.circle")
+                                .font(.footnote).padding(12).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                        }.foregroundStyle(.primary).accessibilityIdentifier("standbySetupIssue")
+                    }.padding(24)
                 }
             }.foregroundStyle(.white)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(StandbyActivityObserver { if !standby.dimmed { standby.activity() } })
                 .simultaneousGesture(DragGesture(minimumDistance: 30).onEnded { value in
+                    guard !standby.dimmed else { return }
+                    standby.activity()
                     switch DashboardSwipe.classify(x: value.translation.width, y: value.translation.height) {
                     case .left: movePage(forward: true)
                     case .right: movePage(forward: false)
@@ -99,7 +115,7 @@ struct Dashboard: View {
         .task {
             guard !didConfigure else { return }
             didConfigure = true
-            if ProcessInfo.processInfo.arguments.contains("--uitesting") { tealWallpaper = false }
+            if ProcessInfo.processInfo.arguments.contains("--uitesting") { tealWallpaper = false; standby.enabled = false }
             photos.restore()
             if ProcessInfo.processInfo.arguments.contains("--demo") {
                 let args = ProcessInfo.processInfo.arguments
@@ -109,33 +125,45 @@ struct Dashboard: View {
                 let mode = UserDefaults.standard.string(forKey: "homeMode")
                 if mode == "demo" { home.startDemo() } else if mode == "live" { home.connect() }
             }
-            UIApplication.shared.isIdleTimerDisabled = keepAwake && phase == .active
+            UIApplication.shared.isIdleTimerDisabled = (keepAwake || standby.enabled) && phase == .active
             weather.setDemo(home.demo)
             if ProcessInfo.processInfo.arguments.contains("--far") { page = .clock }
         }
-        .task(id: phase == .active && (page == .home || page == .overview || page == .photos) && panel == nil && photos.slideshow) {
-            guard phase == .active, page == .home || page == .overview || page == .photos, panel == nil, photos.slideshow else { return }
+        .task(id: phase == .active && !standby.dimmed && (page == .home || page == .overview || page == .photos) && panel == nil && photos.slideshow) {
+            guard phase == .active, !standby.dimmed, page == .home || page == .overview || page == .photos, panel == nil, photos.slideshow else { return }
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(30)) } catch { return }
                 photos.next()
             }
         }
-        .task(id: "\(phase == .active)-\(home.demo)-\(page == .overview || panel == .weather)-\(weather.city?.latitude ?? 0)-\(weather.city?.longitude ?? 0)-\(weather.followsLocation)") {
-            guard phase == .active, !home.demo, page == .overview || panel == .weather else { return }
+        .task(id: "\(phase == .active && !standby.dimmed)-\(home.demo)-\(page == .overview || panel == .weather)-\(weather.city?.latitude ?? 0)-\(weather.city?.longitude ?? 0)-\(weather.followsLocation)") {
+            guard phase == .active, !standby.dimmed, !home.demo, page == .overview || panel == .weather else { return }
             while !Task.isCancelled {
                 weatherLocation.update(weather)
                 await weather.refresh()
                 do { try await Task.sleep(for: .seconds(60)) } catch { return }
             }
         }
-        .onChange(of: keepAwake) { _, value in UIApplication.shared.isIdleTimerDisabled = value && phase == .active }
+        .task(id: "\(phase == .active)-\(panel == nil && page != .settings && !audio.playing && sceneToRun == nil && home.error == nil)-\(home.demo)") {
+            standby.environment(active: phase == .active,
+                                available: panel == nil && page != .settings && !audio.playing && sceneToRun == nil && home.error == nil, demo: home.demo)
+            guard phase == .active else { return }
+            while !Task.isCancelled {
+                standby.tick()
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+            }
+        }
+        .onChange(of: keepAwake) { _, _ in updateIdleTimer() }
+        .onChange(of: standby.enabled) { _, _ in updateIdleTimer() }
+        .onChange(of: standby.dimmed) { _, value in if value { navigationVisible = false; weatherLocation.stop() } }
+        .onDisappear { standby.environment(active: false, available: false, demo: home.demo); UIApplication.shared.isIdleTimerDisabled = false }
         .onChange(of: phase) { _, value in
-            UIApplication.shared.isIdleTimerDisabled = keepAwake && value == .active
+            UIApplication.shared.isIdleTimerDisabled = (keepAwake || standby.enabled) && value == .active
             photos.setActive(value == .active)
             if value == .active {
                 home.refresh()
                 if showPersonal && !home.demo { Task { await personal.loadCalendar(); await personal.loadReminders() } }
-            } else { weatherLocation.stop(); personal.clear(); audio.player.pause(); navigationVisible = false }
+            } else { standby.environment(active: false, available: false, demo: home.demo); weatherLocation.stop(); personal.clear(); audio.player.pause(); navigationVisible = false }
         }
         .onChange(of: home.status) { _, value in
             if !home.demo && value != .ready && panel == .camera { panel = nil; selectedCamera = nil }
@@ -147,7 +175,44 @@ struct Dashboard: View {
         }
         .onChange(of: home.demo) { _, value in weather.setDemo(value); if value { weatherLocation.stop() }; selectedRoom = "All rooms"; widgetOffsets = Array(repeating: 0, count: 6); personal.clear(); audio.stop() }
     }
+    private func updateIdleTimer() { UIApplication.shared.isIdleTimerDisabled = (keepAwake || standby.enabled) && phase == .active }
+    private var standbySurface: some View {
+        ZStack {
+            Color.clear.ignoresSafeArea().contentShape(Rectangle()).onTapGesture { standby.wake() }
+                .accessibilityElement().accessibilityLabel("Standby. Tap to restore brightness")
+                .accessibilityAddTraits(.isButton).accessibilityAction { standby.wake() }.accessibilityIdentifier("standbySurface")
+            if home.demo {
+                VStack(spacing: 16) {
+                    Text("DEMO · Standby").font(.headline).accessibilityIdentifier("demoBadge")
+                    Text(standby.message).font(.footnote).accessibilityIdentifier("standbyDemoStatus")
+                    Button("Simulate sound") { standby.soundDetected() }.accessibilityIdentifier("standbyDemoSound")
+                    if standby.checking {
+                        Button("Simulate face nearby") { standby.simulateFace(true) }.accessibilityIdentifier("standbyDemoFace")
+                        Button("Simulate no face") { standby.simulateFace(false) }.accessibilityIdentifier("standbyDemoNoFace")
+                    }
+                    Button("Wake display") { standby.wake() }.accessibilityIdentifier("standbyDemoWake")
+                }.foregroundStyle(.white).padding().background(.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 20))
+            } else {
+                VStack {
+                    Spacer()
+                    Text(standby.message).font(.footnote).padding(10)
+                        .background(.black.opacity(0.7), in: Capsule())
+                        .accessibilityIdentifier("standbySensorStatus")
+                        .allowsHitTesting(false)
+                    if standby.mode == .soundAndDepth {
+                        Text(standby.lastDetection).font(.caption).multilineTextAlignment(.center)
+                            .accessibilityIdentifier("standbyDetectionResult")
+                    }
+                    if standby.showSoundLevels, let level = standby.soundLevel {
+                        Text(String(format: "Input %.0f dBFS · trigger %.0f dBFS", level, standby.soundThreshold))
+                            .font(.caption.monospacedDigit()).accessibilityIdentifier("standbyAudioLevels")
+                    }
+                }.padding(24).allowsHitTesting(false)
+            }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
     private func activate(_ tile: HomeTile) {
+        standby.activity()
         if tile.kind == .power { home.toggle(tile) }
         else if tile.writable { selectedAccessoryID = tile.id; panel = .accessory }
     }
@@ -158,8 +223,9 @@ struct Dashboard: View {
         return .asymmetric(insertion: .move(edge: pageForward ? .trailing : .leading).combined(with: .opacity),
                            removal: .move(edge: pageForward ? .leading : .trailing).combined(with: .opacity))
     }
-    private func toggleNavigation() { withAnimation(navigationAnimation) { navigationVisible.toggle() } }
+    private func toggleNavigation() { standby.activity(); withAnimation(navigationAnimation) { navigationVisible.toggle() } }
     private func selectPage(_ destination: DashboardPage) {
+        standby.activity()
         pageForward = destination.rawValue >= page.rawValue
         withAnimation(navigationAnimation) { page = destination; navigationVisible = false }
     }
@@ -301,9 +367,10 @@ struct Dashboard: View {
     private func widgetSlot(_ slot: Int, size: CGFloat) -> some View {
         WidgetCarousel(items: options(for: slot), selection: $widgetOffsets[slot], size: size,
                        radius: size * (slot == 0 ? 0.09 : 0.19), slot: slot,
-                       showNavigation: { withAnimation(navigationAnimation) { navigationVisible = true } }) { widget in
+                       showNavigation: { standby.activity(); withAnimation(navigationAnimation) { navigationVisible = true } }) { widget in
             widgetContent(widget, size: size)
-        }.overlay(alignment: .topLeading) { if slot == 0 && home.demo { demoMark.padding(size * 0.035).allowsHitTesting(false) } }
+        }.onChange(of: widgetOffsets[slot]) { _, _ in standby.activity() }
+            .overlay(alignment: .topLeading) { if slot == 0 && home.demo { demoMark.padding(size * 0.035).allowsHitTesting(false) } }
     }
     @ViewBuilder private func widgetContent(_ widget: DashboardWidget, size: CGFloat) -> some View {
         switch widget {
@@ -380,6 +447,7 @@ struct Dashboard: View {
     private func temperatureArrow(_ tile: HomeTile, increase: Bool, size: CGFloat) -> some View {
         let next = tile.temperatureStep(increase: increase)
         return Button {
+            standby.activity()
             if let next { home.adjust(tile.id, to: next) }
         } label: {
             Image(systemName: increase ? "chevron.up" : "chevron.down")
@@ -435,6 +503,13 @@ struct Dashboard: View {
             VStack { if home.cameras.count > 1 { Picker("Camera", selection: $selectedCamera) { ForEach(home.cameras, id: \.uniqueIdentifier) { Text($0.name).tag(Optional($0)) } }.padding() }; CameraSheet(accessory: selectedCamera, demo: home.demo).id(selectedCamera?.uniqueIdentifier) }
         case .photos: PhotosPanel(photos: photos)
         case .weather: WeatherPanel(weather: weather, location: weatherLocation)
+        case .standby: StandbySettings(standby: standby) {
+            self.panel = nil; selectPage(.overview)
+            Task {
+                try? await Task.sleep(for: .milliseconds(600))
+                standby.dim()
+            }
+        }
         case .accessory:
             if let id = selectedAccessoryID { AccessoryAdjustmentView(home: home, id: id) }
         case .settings: settings
@@ -498,8 +573,9 @@ struct Dashboard: View {
             Section("Display") {
                 Toggle("Teal background", isOn: $tealWallpaper).accessibilityIdentifier("tealWallpaper")
                 Text("Tap the background to show navigation: below in portrait, on the right in landscape. Position dots show the current widget. Swipe left or right to change pages. Swipe up or down inside a widget to change it. VoiceOver offers the same actions.").font(.footnote)
-                Toggle("Keep display awake in foreground", isOn: $keepAwake)
-                Text("Does not replace the lock screen or reopen the app after reboot. Use Guided Access in iPad Settings if appropriate. Far view is manual; no camera tracks you.").font(.footnote)
+                Toggle("Keep display awake in foreground", isOn: $keepAwake).accessibilityIdentifier("keepAwake")
+                Text("Does not replace the lock screen or reopen the app after reboot. Use Guided Access in iPad Settings if appropriate. Optional standby keeps the app awake and dims it; configure sound and short TrueDepth wake checks separately.").font(.footnote)
+                Button("Standby and wake") { panel = .standby }.accessibilityIdentifier("standbySettings")
                 Button("Weather city and units") { panel = .weather }.accessibilityIdentifier("weatherSettings")
                 Button("Photo widget and albums") { panel = .photos }.accessibilityIdentifier("photoSettings")
             }

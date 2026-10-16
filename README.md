@@ -60,7 +60,7 @@ A 15-second edit of a fresh simulator recording, with faster playback and the lo
 
 Prefer lights out? **Overview** puts just four square widgets on pure black: date, a numbered analog clock, your album, and weather. White type, yellow accents, no glass. It is now the first page. Live weather comes from [Open-Meteo](https://open-meteo.com/): Philadelphia by default, your city after Apple Location Services permission, or a city you choose. Tap weather to search, refresh, or switch °C/°F. Demo weather stays fixed and labeled.
 
-Also included: optional HomeKit camera viewing, opt-in calendar and reminders, local audio playback with the system AirPlay picker, and foreground screen-awake mode. Demo mode works without accessories and never initializes the real HomeKit manager.
+Also included: optional HomeKit camera viewing, opt-in calendar and reminders, local audio playback with the system AirPlay picker, and foreground screen-awake mode. Experimental **Standby and wake** keeps the app unlocked, keeps the dashboard visible at minimum screen brightness, and restores brightness on touch or sound. Sound directly wakes the display by default, with adjustable sensitivity. Optional TrueDepth requires a nearby face after sound; the camera stays off between checks. Demo mode works without accessories and never initializes the real HomeKit manager.
 
 ### A few gestures. That's the manual.
 
@@ -113,7 +113,7 @@ Album photos are loaded on demand; iCloud may download them through PhotoKit. A 
 
 This is an early independent project, not an Apple product or a complete HomeView replacement. HomeViewPad is not a home hub and cannot access a HomePod microphone, host Siri, send Intercom messages, or embed FaceTime.
 
-It does not create automations or directly edit locks, blinds, or thermostat modes. Existing scenes can contain those actions, so scene execution always asks for confirmation. There is no Apple Music catalog integration, presence detection, or background camera recording.
+It does not create automations or directly edit locks, blinds, or thermostat modes. Existing scenes can contain those actions, so scene execution always asks for confirmation. There is no Apple Music catalog integration or background camera recording. Standby is opt-in under Settings → Standby and wake. It cannot unlock iPad or reopen the app. Enabling standby requests the needed permissions. Missing permissions or microphone failures keep or restore normal brightness and show the reason. The microphone runs while dimmed; TrueDepth checks use the front image and depth for up to three seconds, with system privacy indicators. Quiet arrivals can be missed, and real-device detection, power use, and dark-room performance remain unverified. Devices without TrueDepth can use Sound or touch; there is no regular-camera fallback.
 
 Simulator tests cover app logic and interface flows. Real accessory compatibility, camera streaming, AirPlay, and long-running wall-display behavior still require [hardware validation](docs/HARDWARE_CHECKLIST.md). [What we've actually tested →](docs/VALIDATION.md)
 

@@ -18,7 +18,13 @@ final class HomePadUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["overviewBoard"].waitForExistence(timeout: 5))
         app.swipeLeft()
         expectation(for: NSPredicate { _, _ in
-            !self.app.descendants(matching: .any)["overviewBoard"].exists && self.app.buttons["photoWidget"].isHittable
+            let target: XCUIElement
+            if self.app.launchArguments.contains("--fresh") {
+                target = self.app.buttons["connectHome"]
+            } else if self.app.launchArguments.contains("UICTContentSizeCategoryAccessibilityXXXL") {
+                target = self.app.descendants(matching: .any)["climateWidget"]
+            } else { target = self.app.buttons["photoWidget"] }
+            return !self.app.descendants(matching: .any)["overviewBoard"].exists && target.isHittable
         }, evaluatedWith: nil)
         waitForExpectations(timeout: 5)
     }
@@ -288,6 +294,71 @@ final class HomePadUITests: XCTestCase {
         XCTAssertTrue(app.buttons["connectHome"].exists); XCTAssertFalse(app.staticTexts["demoBadge"].exists); shot("Real onboarding")
         app.buttons["exploreDemo"].tap(); XCTAssertTrue(app.staticTexts["demoBadge"].exists)
     }
+    func testStandbyEnableRequestsMicrophoneAndDeniedAccessBlocksDimming() {
+        app.terminate(); app.resetAuthorizationStatus(for: .microphone)
+        app.launchArguments = ["--fresh", "--uitesting", "-standbyWakeMode", "sound", "-standbyEnabled", "NO"]
+        app.launch(); dismissLocationPrompt()
+        tab(4)
+        let settings = app.buttons["standbySettings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 5)); settings.tap()
+        let toggle = app.switches["standbyEnabled"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5))
+        if toggle.switches.firstMatch.exists { toggle.switches.firstMatch.tap() } else { toggle.tap() }
+        let deny = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons.matching(NSPredicate(format: "label BEGINSWITH[c] %@", "Don")).firstMatch
+        XCTAssertTrue(deny.waitForExistence(timeout: 5)); deny.tap()
+        let status = app.staticTexts["standbyStatus"]
+        reveal(status)
+        XCTAssertTrue(status.label.contains("Microphone access is required"))
+        reveal(app.buttons["standbyNow"]); XCTAssertFalse(app.buttons["standbyNow"].isEnabled)
+        shot("Standby missing microphone permission")
+        closePanel(); tab(0)
+        XCTAssertTrue(app.buttons["standbySetupIssue"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["standbySurface"].exists)
+        app.terminate(); app.resetAuthorizationStatus(for: .microphone)
+    }
+    func testForegroundStandbyDemoWakeAndBackgroundRecovery() {
+        app.terminate()
+        app.launchArguments = ["--demo", "--uitesting", "-standbyWakeMode", "soundAndDepth"]
+        launchHome()
+        func openStandby() {
+            tab(4)
+            let settings = app.buttons["standbySettings"]
+            expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: settings)
+            waitForExpectations(timeout: 5)
+            settings.tap()
+            XCTAssertTrue(app.switches["standbyEnabled"].waitForExistence(timeout: 5))
+        }
+        func start() {
+            reveal(app.buttons["standbyNow"]); app.buttons["standbyNow"].tap()
+            XCTAssertTrue(app.buttons["standbyDemoSound"].waitForExistence(timeout: 5))
+        }
+        openStandby()
+        XCTAssertFalse(app.buttons["standbyPermissions"].exists)
+        let toggle = app.switches["standbyEnabled"]
+        if toggle.value as? String == "0" {
+            if toggle.switches.firstMatch.exists { toggle.switches.firstMatch.tap() } else { toggle.tap() }
+        }
+        XCTAssertEqual(toggle.value as? String, "1")
+        shot("Standby settings demo")
+        reveal(app.staticTexts["standbyDemoNotice"])
+        XCTAssertTrue(app.staticTexts["standbyDemoNotice"].exists)
+        start(); shot("Standby demo dimmed")
+        app.buttons["standbyDemoSound"].tap()
+        XCTAssertTrue(app.buttons["standbyDemoNoFace"].waitForExistence(timeout: 2)); app.buttons["standbyDemoNoFace"].tap()
+        XCTAssertTrue(app.buttons["standbyDemoWake"].exists)
+        app.buttons["standbyDemoWake"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["overviewBoard"].waitForExistence(timeout: 5))
+        openStandby(); start(); app.buttons["standbyDemoSound"].tap()
+        XCTAssertTrue(app.buttons["standbyDemoFace"].waitForExistence(timeout: 2)); app.buttons["standbyDemoFace"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["overviewBoard"].waitForExistence(timeout: 5))
+        openStandby(); start(); XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(app.descendants(matching: .any)["overviewBoard"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["standbyDemoWake"].exists)
+        openStandby(); if toggle.value as? String == "1" {
+            if toggle.switches.firstMatch.exists { toggle.switches.firstMatch.tap() } else { toggle.tap() }
+        }
+        closePanel()
+    }
     func testLiveWeatherDefaultCitySearchAndRestore() {
         app.terminate(); app.launchArguments = ["--fresh", "--uitesting", "-weatherFollowsLocation", "YES"]; app.launch()
         dismissLocationPrompt()
@@ -303,11 +374,27 @@ final class HomePadUITests: XCTestCase {
         search.tap(); search.typeText("New York\n")
         XCTAssertEqual(search.value as? String, "New York")
         app.collectionViews.firstMatch.swipeUp()
-        shot("Weather city search")
         let result = app.buttons["weatherCity-5128581"]
-        XCTAssertTrue(result.waitForExistence(timeout: 20)); result.tap()
+        XCTAssertTrue(result.waitForExistence(timeout: 20))
+        let form = app.collectionViews.firstMatch
+        // Keep the row clear of the translucent navigation bar before tapping.
+        for _ in 0..<6 {
+            let visible = form.frame.insetBy(dx: 10, dy: 100)
+            let center = CGPoint(x: result.frame.midX, y: result.frame.midY)
+            if visible.contains(center), result.isHittable { break }
+            let start = form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            let end = start.withOffset(CGVector(dx: 0, dy: center.y < visible.minY ? 160 : -160))
+            start.press(forDuration: 0.1, thenDragTo: end)
+        }
+        XCTAssertTrue(form.frame.insetBy(dx: 10, dy: 100).contains(CGPoint(x: result.frame.midX, y: result.frame.midY)))
+        shot("Weather city search"); result.tap()
+        // Search results scroll the form; the selected city's reading is above them.
+        for _ in 0..<3 {
+            if app.staticTexts["weatherSelectedCity"].isHittable { break }
+            app.collectionViews.firstMatch.swipeDown()
+        }
         XCTAssertTrue(app.staticTexts["weatherLiveReading"].waitForExistence(timeout: 30))
-        XCTAssertTrue(app.staticTexts["weatherSelectedCity"].label.contains("New York"))
+        XCTAssertTrue(app.staticTexts["weatherSelectedCity"].label.contains("New York"), app.staticTexts["weatherSelectedCity"].label)
         closePanel(); shot("Live weather overview")
         app.terminate(); app.launchArguments = ["--fresh", "--uitesting"]; app.launch()
         XCTAssertTrue(weather.waitForExistence(timeout: 5)); weather.tap()

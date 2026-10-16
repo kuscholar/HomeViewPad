@@ -1,0 +1,59 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceName": "iPad Pro 11-inch (M5)",
+        "modelName": "iPad Pro 11-inch (M5)",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 2,
+      "passedTests": 47,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "HomePad \u00b7 Built with macOS 27.0.1",
+  "expectedFailures": 0,
+  "failedTests": 2,
+  "finishTime": 1792101745.499,
+  "passedTests": 47,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1792100939.492,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "XCTAssertTrue failed",
+      "targetName": "HomePadUITests",
+      "testIdentifier": 40,
+      "testIdentifierString": "HomePadUITests/testLiveWeatherDefaultCitySearchAndRestore()",
+      "testIdentifierURL": "test://com.apple.xcode/HomePad/HomePadUITests/HomePadUITests/testLiveWeatherDefaultCitySearchAndRestore",
+      "testName": "testLiveWeatherDefaultCitySearchAndRestore()"
+    },
+    {
+      "failureText": "Asynchronous wait failed: Exceeded timeout of 5 seconds, with unfulfilled expectations: \"Expect predicate `BLOCKPREDICATE(0x105950510)`\".",
+      "targetName": "HomePadUITests",
+      "testIdentifier": 46,
+      "testIdentifierString": "HomePadUITests/testRealConnectionGracefulWithoutDevices()",
+      "testIdentifierURL": "test://com.apple.xcode/HomePad/HomePadUITests/HomePadUITests/testRealConnectionGracefulWithoutDevices",
+      "testName": "testRealConnectionGracefulWithoutDevices()"
+    }
+  ],
+  "title": "Test - HomePad",
+  "topInsights": [
+    {
+      "category": "Longest Test Runs",
+      "impact": "94% of duration",
+      "text": "1 longest test run with outlier durations exceeding 1.89s (three standard deviations)"
+    }
+  ],
+  "totalTestCount": 49
+}

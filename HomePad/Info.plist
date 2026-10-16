@@ -18,10 +18,14 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Show upcoming events on this shared iPad screen only after you opt in.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>After a sound in standby, briefly check for a nearby face using the front TrueDepth camera. No images or depth data are saved or uploaded.</string>
 	<key>NSHomeKitUsageDescription</key>
 	<string>HomeViewPad shows your home accessories, runs scenes you select, and displays cameras only when you open them.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Show weather for your current city. If location is unavailable, HomeViewPad uses Philadelphia. Approximate coordinates are sent to Open-Meteo for weather.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>While foreground standby is dimmed, detect sound levels to wake the display or start a short TrueDepth check. No audio is recorded or uploaded.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Display photos from the iPad albums you choose in the HomeViewPad photo widget. HomeViewPad never changes your photo library.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
