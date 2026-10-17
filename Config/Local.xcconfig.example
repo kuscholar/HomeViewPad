@@ -1,3 +1,6 @@
 // Copy to Local.xcconfig and supply your own values.
 HOMEVIEWPAD_BUNDLE_IDENTIFIER = com.example.homeviewpad
 HOMEVIEWPAD_DEVELOPMENT_TEAM = YOUR_TEAM_ID
+
+// Optional: after enabling WeatherKit for your App ID, include its entitlement in Debug.
+// HOMEVIEWPAD_DEBUG_ENTITLEMENTS = HomePad/HomePad.entitlements

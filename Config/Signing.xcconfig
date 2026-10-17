@@ -1,4 +1,6 @@
 // Shared defaults. Put personal overrides in the ignored Local.xcconfig.
 HOMEVIEWPAD_BUNDLE_IDENTIFIER = org.homeviewpad.app
 HOMEVIEWPAD_DEVELOPMENT_TEAM =
+// Debug can use Open-Meteo without WeatherKit provisioning. Opt in locally to test Apple weather.
+HOMEVIEWPAD_DEBUG_ENTITLEMENTS = HomePad/HomePadDebug.entitlements
 #include? "Local.xcconfig"

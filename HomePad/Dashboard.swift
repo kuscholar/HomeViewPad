@@ -136,7 +136,7 @@ struct Dashboard: View {
                 photos.next()
             }
         }
-        .task(id: "\(phase == .active && !standby.dimmed)-\(home.demo)-\(page == .overview || panel == .weather)-\(weather.city?.latitude ?? 0)-\(weather.city?.longitude ?? 0)-\(weather.followsLocation)") {
+        .task(id: "\(phase == .active && !standby.dimmed)-\(home.demo)-\(page == .overview || panel == .weather)-\(weather.city?.latitude ?? 0)-\(weather.city?.longitude ?? 0)-\(weather.followsLocation)-\(weather.provider.rawValue)") {
             guard phase == .active, !standby.dimmed, !home.demo, page == .overview || panel == .weather else { return }
             while !Task.isCancelled {
                 weatherLocation.update(weather)

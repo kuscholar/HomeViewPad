@@ -111,11 +111,11 @@ struct OverviewBoard: View {
                         .font(.system(size: size * 0.052)).foregroundStyle(.white.opacity(0.75))
                         .lineLimit(1).minimumScaleFactor(0.7)
                 }.frame(width: size * 0.86, alignment: .leading)
-                    .frame(width: size, height: size - (!demo && reading?.source != nil ? 30 : 0))
+                    .frame(width: size, height: size - (!demo && reading?.hasAttribution == true ? 30 : 0))
                     .background(.black).contentShape(Rectangle())
             }.accessibilityElement(children: .combine).accessibilityIdentifier("overviewWeather")
-            if !demo, let source = reading?.source {
-                AppleWeatherAttribution(source: source, onDark: true).frame(height: 30)
+            if !demo, let reading, reading.hasAttribution {
+                WeatherAttributionLink(reading: reading, onDark: true).frame(height: 30)
             }
         }.frame(width: size, height: size).background(.black)
     }

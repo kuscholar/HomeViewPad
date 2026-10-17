@@ -359,6 +359,46 @@ final class HomePadUITests: XCTestCase {
         }
         closePanel()
     }
+    func testDebugWeatherProviderSwitchAndPersistence() {
+        app.terminate()
+        app.launchArguments = ["--fresh", "--uitesting", "-debugWeatherProvider", "openMeteo", "-weatherFollowsLocation", "NO"]
+        app.launch()
+        let weather = app.buttons["overviewWeather"]
+        XCTAssertTrue(weather.waitForExistence(timeout: 5)); weather.tap()
+        app.buttons["removeWeatherCity"].tap()
+        XCTAssertTrue(app.staticTexts["weatherLiveReading"].waitForExistence(timeout: 30))
+        closePanel()
+        XCTAssertTrue(app.links["openMeteoAttribution"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.links["appleWeatherAttribution"].exists)
+        shot("Debug Open-Meteo live overview")
+        weather.tap()
+        let form = app.collectionViews.firstMatch
+        let picker = app.segmentedControls["weatherProviderPicker"]
+        for _ in 0..<6 { if picker.isHittable { break }; form.swipeUp() }
+        XCTAssertTrue(picker.buttons["Open-Meteo"].isSelected)
+        shot("Debug weather provider options")
+        picker.buttons["WeatherKit"].tap()
+        XCTAssertTrue(picker.buttons["WeatherKit"].isSelected)
+        XCTAssertFalse(form.descendants(matching: .any)["openMeteoAttribution"].exists)
+        for _ in 0..<5 { if app.staticTexts["weatherSelectedCity"].isHittable { break }; form.swipeDown() }
+        assertWeatherServiceResult()
+        closePanel()
+        XCTAssertFalse(app.links["openMeteoAttribution"].exists)
+        app.terminate()
+        // Remove launch-domain overrides: the user's persisted choice must survive relaunch.
+        app.launchArguments = ["--fresh", "--uitesting"]
+        app.launch(); XCTAssertTrue(weather.waitForExistence(timeout: 5)); weather.tap()
+        for _ in 0..<6 { if picker.isHittable { break }; form.swipeUp() }
+        XCTAssertTrue(picker.buttons["WeatherKit"].isSelected)
+        picker.buttons["Open-Meteo"].tap()
+        XCTAssertTrue(picker.buttons["Open-Meteo"].isSelected)
+        for _ in 0..<5 { if app.staticTexts["weatherSelectedCity"].isHittable { break }; form.swipeDown() }
+        XCTAssertTrue(app.staticTexts["weatherLiveReading"].waitForExistence(timeout: 30))
+        closePanel()
+        XCTAssertTrue(app.links["openMeteoAttribution"].waitForExistence(timeout: 5))
+        XCUIDevice.shared.orientation = .landscapeLeft
+        shot("Debug Open-Meteo live landscape")
+    }
     // Unsigned simulators exercise either real data or the explicit service-error state.
     // A passing test does not certify WeatherKit authorization or network availability.
     func assertWeatherServiceResult() {
@@ -394,7 +434,7 @@ final class HomePadUITests: XCTestCase {
         shot("WeatherKit fixture attribution panel")
     }
     func testWeatherCitySearchPersistenceAndServiceState() {
-        app.terminate(); app.launchArguments = ["--fresh", "--uitesting", "-weatherFollowsLocation", "YES"]; app.launch()
+        app.terminate(); app.launchArguments = ["--fresh", "--uitesting", "-debugWeatherProvider", "weatherKit", "-weatherFollowsLocation", "YES"]; app.launch()
         dismissLocationPrompt()
         let weather = app.buttons["overviewWeather"]
         XCTAssertTrue(weather.waitForExistence(timeout: 5)); weather.tap()
@@ -430,7 +470,7 @@ final class HomePadUITests: XCTestCase {
         assertWeatherServiceResult()
         XCTAssertTrue(app.staticTexts["weatherSelectedCity"].label.contains("New York"), app.staticTexts["weatherSelectedCity"].label)
         closePanel(); shot("WeatherKit overview service state")
-        app.terminate(); app.launchArguments = ["--fresh", "--uitesting"]; app.launch()
+        app.terminate(); app.launchArguments = ["--fresh", "--uitesting", "-debugWeatherProvider", "weatherKit"]; app.launch()
         XCTAssertTrue(weather.waitForExistence(timeout: 5)); weather.tap()
         XCTAssertTrue(app.staticTexts["weatherSelectedCity"].label.contains("New York"))
         app.buttons["removeWeatherCity"].tap() // Leave the simulator on the requested default city.
@@ -438,7 +478,7 @@ final class HomePadUITests: XCTestCase {
     }
     func testLocationPermissionUsesDetectedCity() {
         app.terminate(); app.resetAuthorizationStatus(for: .location)
-        app.launchArguments = ["--fresh", "--uitesting", "-weatherFollowsLocation", "YES"]; app.launch()
+        app.launchArguments = ["--fresh", "--uitesting", "-debugWeatherProvider", "weatherKit", "-weatherFollowsLocation", "YES"]; app.launch()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let allow = springboard.buttons["Allow While Using App"]
         XCTAssertTrue(allow.waitForExistence(timeout: 8)); allow.tap()

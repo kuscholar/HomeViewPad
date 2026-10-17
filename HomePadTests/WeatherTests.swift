@@ -3,12 +3,22 @@ import XCTest
 
 private actor WeatherStub: WeatherProviding {
     var calls = 0
+    var searchCalls = 0
+    var pendingSearch: CheckedContinuation<[WeatherCity], Error>?
+    var holdSearch = false
+    let searchStarted: (() -> Void)?
     var fail = false
     var hold = false
     var pending: CheckedContinuation<WeatherReading, Error>?
     let started: (() -> Void)?
-    init(started: (() -> Void)? = nil) { self.started = started }
-    func search(_ name: String) async throws -> [WeatherCity] { [.philadelphia] }
+    init(started: (() -> Void)? = nil, searchStarted: (() -> Void)? = nil) { self.started = started; self.searchStarted = searchStarted }
+    func search(_ name: String) async throws -> [WeatherCity] {
+        searchCalls += 1; searchStarted?()
+        if holdSearch { return try await withCheckedThrowingContinuation { pendingSearch = $0 } }
+        return [.philadelphia]
+    }
+    func setHoldSearch() { holdSearch = true }
+    func finishSearch() { pendingSearch?.resume(returning: [.philadelphia]); pendingSearch = nil }
     func fetch(_ city: WeatherCity) async throws -> WeatherReading {
         calls += 1; started?()
         if hold { return try await withCheckedThrowingContinuation { pending = $0 } }
@@ -97,7 +107,7 @@ final class WeatherTests: XCTestCase {
         let defaults = UserDefaults(suiteName: name)!
         defer { defaults.removePersistentDomain(forName: name) }
         let started = expectation(description: "request started")
-        let stub = WeatherStub { started.fulfill() }; await stub.setHold()
+        let stub = WeatherStub(started: { started.fulfill() }); await stub.setHold()
         let store = WeatherStore(defaults: defaults, client: stub)
         let task = Task { await store.refresh() }
         await fulfillment(of: [started], timeout: 2)
@@ -119,4 +129,78 @@ final class WeatherTests: XCTestCase {
         store.enableLocation(); store.setDemo(true); store.applyLocatedCity(detected)
         XCTAssertEqual(store.city, .philadelphia)
     }
+    #if DEBUG
+    func testOpenMeteoDecodingAndNightSymbols() throws {
+        let json = #"{"current":{"time":1792032300,"temperature_2m":21.0,"weather_code":0,"is_day":0},"daily":{"temperature_2m_max":[26.8],"temperature_2m_min":[18.1]}}"#
+        let reading = try OpenMeteoClient.decode(Data(json.utf8))
+        XCTAssertEqual(reading.provider, .openMeteo); XCTAssertNil(reading.source)
+        XCTAssertTrue(reading.hasAttribution)
+        XCTAssertEqual(reading.degrees(reading.temperature, fahrenheit: true), "70°")
+        XCTAssertEqual(reading.condition, "Clear"); XCTAssertEqual(reading.symbol, "moon.stars.fill")
+        for invalid in [json.replacingOccurrences(of: "[26.8]", with: "[null]"),
+                        json.replacingOccurrences(of: "[18.1]", with: "[]"),
+                        json.replacingOccurrences(of: "[26.8]", with: "[10.0]"), "{}"] {
+            XCTAssertThrowsError(try OpenMeteoClient.decode(Data(invalid.utf8)))
+        }
+        XCTAssertEqual(OpenMeteoClient.forecastURL(.philadelphia).host, "api.open-meteo.com")
+    }
+    @MainActor func testDebugProviderDefaultPersistenceAndCacheIsolation() async {
+        let name = "WeatherTests.\(UUID())", first = WeatherStub(), second = WeatherStub()
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let store = WeatherStore(defaults: defaults, clientFactory: { $0 == .openMeteo ? first : second })
+        XCTAssertEqual(store.provider, .openMeteo)
+        store.select(.philadelphia); store.fahrenheit = false
+        await store.refresh(); XCTAssertNotNil(store.reading)
+        await first.setFailure(); await store.refresh(force: true); XCTAssertTrue(store.failed)
+        store.setProvider(.weatherKit)
+        XCTAssertNil(store.reading); XCTAssertFalse(store.failed); XCTAssertFalse(store.loading)
+        XCTAssertEqual(store.city, .philadelphia); XCTAssertFalse(store.fahrenheit); XCTAssertFalse(store.followsLocation)
+        await store.refresh(); let count = await second.calls; XCTAssertEqual(count, 1)
+        XCTAssertEqual(WeatherStore(defaults: defaults, client: second).provider, .weatherKit)
+        defaults.set("invalid", forKey: "debugWeatherProvider")
+        XCTAssertEqual(WeatherStore(defaults: defaults, client: first).provider, .openMeteo)
+    }
+    @MainActor func testProviderChangeRejectsOldWeatherAndSearchEvenAfterSwitchingBack() async {
+        let name = "WeatherTests.\(UUID())"
+        let isolated = UserDefaults(suiteName: name)!
+        defer { isolated.removePersistentDomain(forName: name) }
+        let fetched = expectation(description: "old provider fetch started")
+        let searched = expectation(description: "old provider search started")
+        let old = WeatherStub(started: { fetched.fulfill() }, searchStarted: { searched.fulfill() })
+        let replacement = WeatherStub()
+        await old.setHold(); await old.setHoldSearch()
+        let store = WeatherStore(defaults: isolated, clientFactory: { $0 == .openMeteo ? old : replacement })
+        let fetch = Task { await store.refresh() }
+        let search = Task { try await store.search("Philadelphia") }
+        await fulfillment(of: [fetched, searched], timeout: 2)
+        store.setProvider(.weatherKit); store.setProvider(.openMeteo)
+        await old.finish(); await old.finishSearch(); await fetch.value
+        XCTAssertNil(store.reading); XCTAssertFalse(store.failed)
+        do { _ = try await search.value; XCTFail("An old provider's city results must be discarded") }
+        catch { XCTAssertTrue(error is CancellationError) }
+    }
+    @MainActor func testDemoProviderSelectionDoesNotFetchOrSearch() async throws {
+        let name = "WeatherTests.\(UUID())"
+        let isolated = UserDefaults(suiteName: name)!, stub = WeatherStub()
+        defer { isolated.removePersistentDomain(forName: name) }
+        let store = WeatherStore(defaults: isolated, demo: true, clientFactory: { _ in stub })
+        store.setProvider(.weatherKit); await store.refresh(force: true)
+        let cities = try await store.search("Philadelphia")
+        XCTAssertTrue(cities.isEmpty)
+        let fetches = await stub.calls, searches = await stub.searchCalls
+        XCTAssertEqual(fetches, 0); XCTAssertEqual(searches, 0); XCTAssertNil(store.reading)
+    }
+    #else
+    @MainActor func testReleaseIgnoresDebugProviderPreference() {
+        let name = "WeatherTests.\(UUID())"
+        let isolated = UserDefaults(suiteName: name)!
+        defer { isolated.removePersistentDomain(forName: name) }
+        isolated.set("openMeteo", forKey: "debugWeatherProvider")
+        XCTAssertEqual(WeatherProvider.allCases, [.weatherKit])
+        XCTAssertEqual(WeatherProvider.initial(defaults: isolated), .weatherKit)
+        XCTAssertEqual(WeatherStore(defaults: isolated, client: WeatherStub()).provider, .weatherKit)
+    }
+    #endif
+
 }
