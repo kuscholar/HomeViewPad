@@ -56,7 +56,7 @@ iPad 跑 App，HomePod mini 在 Apple Home 中独立工作。这套组合能覆�
 | **该控制的时候，直接动手** | **少一点界面，多一点生活** |
 | 选择家庭和房间，控制支持的配件，确认后运行场景。温度箭头遵守设备的调节范围和步长。 | 左右切页面，上下切组件。每个组件位置各司其职，轮播指示点只在切换时短暂出现。 |
 
-想再安静一点？**Overview 四宫格**只留下日期、数字刻度指针钟、相册和天气。纯黑背景与组件，白色文字、黄色点缀，不用玻璃材质。现在它就是打开 App 的第一屏。正常模式接入 [Open-Meteo](https://open-meteo.com/) 天气：默认费城，获得 Apple 定位授权后显示所在城市，也能手动选城市。点击天气可搜索、刷新和切换摄氏/华氏；DEMO 中保留固定示例。
+想再安静一点？**Overview 四宫格**只留下日期、数字刻度指针钟、相册和天气。纯黑背景与组件，白色文字、黄色点缀，不用玻璃材质。现在它就是打开 App 的第一屏。正常模式接入 [Apple WeatherKit](https://developer.apple.com/cn/weatherkit/) 天气：默认费城，获得 Apple 定位授权后显示所在城市，也能手动选城市。点击天气可搜索、刷新和切换摄氏/华氏；DEMO 中保留固定示例。
 
 还包括按需开启的 HomeKit 摄像头、可选日历与提醒事项、本地音频与系统 AirPlay 选择器，以及前台保持屏幕常亮的选项。实验性「Standby and wake」会保持 App 不锁屏，待机时保留当前页面、只把屏幕亮度降到最低，默认由声音直接恢复原亮度，可调节声音灵敏度，也可以触摸唤醒；若主动选择 TrueDepth 模式，则必须在声音触发后确认近距离人脸才亮屏，平时不开摄像头。没有智能家居设备，也可以直接体验 DEMO。
 
@@ -88,9 +88,10 @@ open HomePad.xcodeproj
 
 1. 把 `Config/Local.xcconfig.example` 复制为 `Config/Local.xcconfig`。
 2. 填入自己的唯一 Bundle ID 和开发团队。此本地文件已被 Git 忽略。
-3. 连接 iPad，用 **HomePad** scheme 构建。账号需要支持 HomeKit 签名配置，并按 Apple 提示完成设备信任与开发者模式设置。
-4. 向左滑到 **Home**，选择 **Connect Apple Home**、授权并选择家庭。配件和场景先在 Apple 的「家庭」App 中配置。
-5. 点击照片组件，选择单张图片，或连接照片库并选择相册。有限授权下只显示允许访问的照片。
+3. 连接 iPad，用 **HomePad** scheme 构建。账号需要支持 HomeKit 和 WeatherKit 签名配置，并按 Apple 提示完成设备信任与开发者模式设置。
+4. 真实天气需要付费 Apple Developer Program 会员。在开发者网站的 App ID 设置中，同时开启 WeatherKit 的 Capability 和 App Service，再让 Xcode 更新自动签名。未签名的模拟器可能显示天气不可用，不能据此判断真实天气已接通。
+5. 向左滑到 **Home**，选择 **Connect Apple Home**、授权并选择家庭。配件和场景先在 Apple 的「家庭」App 中配置。
+6. 点击照片组件，选择单张图片，或连接照片库并选择相册。有限授权下只显示允许访问的照片。
 
 HomePod mini 是可选项，在 Apple「家庭」App 中独立设置。播放本地音频时可通过系统 AirPlay 选择器选择它；Apple Music 使用系统「音乐」App 和音频路由。
 
@@ -102,7 +103,7 @@ HomePod mini 是可选项，在 Apple「家庭」App 中独立设置。播放本
 
 无需 App 账号、自建后端或分析 SDK。家庭、照片、日历和提醒事项使用 Apple 公共 API 与系统授权。个人日历和提醒默认隐藏，只有主动开启后才显示。
 
-天气功能会把城市搜索词和坐标发给 Open-Meteo。自动定位使用 Apple 的前台授权与城市查询，天气坐标会取整到约 1 公里精度，自动检测到的坐标不写入磁盘；手动城市与温度单位保存在本机。断网时旧天气会标为缓存数据。免费天气接口适用于个人/非商业用途，商业发行前需选择合适的 [Open-Meteo 方案](https://open-meteo.com/en/pricing)或其他获许可的数据源。
+天气和城市搜索均使用 Apple 服务：原生 WeatherKit 提供天气，Core Location 提供城市查询。自动定位使用 Apple 的前台授权，天气坐标会取整到约 1 公里精度，自动检测到的坐标不写入磁盘；手动城市与温度单位保存在本机。断网时旧天气会标为缓存数据。天气组件和面板保留 Apple 要求的标识与数据来源链接。不再调用 Open-Meteo，也不需要第三方 API 密钥。WeatherKit 可依 [Apple 条款](https://developer.apple.com/cn/weatherkit/)用于商业 App；每个付费开发者会员每月包含 50 万次调用，由所有用户共享，超出需购买相应套餐。正常情况下可见时每 15 分钟刷新一次，待机或后台不刷新。
 
 相册按需读取，iCloud 图片可能经 PhotoKit 下载；单张导入照片保存在 App 沙盒内。App 不修改系统照片库。**共享屏幕上的内容，旁人也能看见。** [数据如何保存与清除 →](ARCHITECTURE.md)
 

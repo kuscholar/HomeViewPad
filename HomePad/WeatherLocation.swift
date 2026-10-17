@@ -13,7 +13,7 @@ import SwiftUI
     private var geocodeTask: Task<Void, Never>?
 
     func update(_ weather: WeatherStore, force: Bool = false) {
-        guard !weather.demo, weather.followsLocation else { stop(); return }
+        guard !weather.demo, !weather.isPreview, weather.followsLocation else { stop(); return }
         self.weather = weather
         if force { lastAttempt = nil }
         if manager == nil {

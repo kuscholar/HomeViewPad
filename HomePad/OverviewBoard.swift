@@ -30,10 +30,10 @@ struct OverviewBoard: View {
         .padding(inset).frame(width: side, height: side).background(.black)
         .foregroundStyle(.white).buttonStyle(.plain)
         .overlay(alignment: .bottomLeading) {
-            if demoDate != nil {
-                Text("DEMO").font(.system(size: 11, weight: .semibold)).tracking(1)
+            if demoDate != nil || weather.isPreview {
+                Text(weather.isPreview ? "TEST WEATHER · Simulated data" : "DEMO").font(.system(size: 11, weight: .semibold)).tracking(1)
                     .foregroundStyle(.white.opacity(0.65)).padding(.leading, inset).padding(.bottom, 5)
-                    .accessibilityIdentifier("demoBadge")
+                    .accessibilityIdentifier(weather.isPreview ? "weatherPreviewBadge" : "demoBadge")
             }
         }
         .accessibilityElement(children: .contain).accessibilityIdentifier("overviewBoard")
@@ -94,26 +94,29 @@ struct OverviewBoard: View {
         let reading = demo ? WeatherReading.demo : weather.reading
         let fahrenheit = demo ? true : weather.fahrenheit
         let status = demo ? "Partly Cloudy" : weather.failed ? (reading == nil ? "Unavailable" : "Offline · cached") : weather.stale() ? "Outdated · tap to refresh" : reading?.condition ?? (weather.city == nil ? "Choose a city" : "Loading…")
-        return Button(action: configureWeather) {
-            VStack(alignment: .leading, spacing: size * 0.015) {
-                Text(demo ? "Philadelphia" : weather.city?.name ?? "Weather")
-                    .font(.system(size: size * 0.063, weight: .medium)).foregroundStyle(yellow)
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                Text(reading.map { $0.degrees($0.temperature, fahrenheit: fahrenheit) } ?? "—°")
-                    .font(.system(size: size * 0.40, weight: .light)).tracking(-size * 0.02)
-                    .lineLimit(1).minimumScaleFactor(0.65)
-                Image(systemName: reading?.symbol ?? "cloud")
-                    .symbolRenderingMode(.palette).foregroundStyle(.white, yellow)
-                    .font(.system(size: size * 0.085))
-                Text(status).font(.system(size: size * 0.058)).lineLimit(1).minimumScaleFactor(0.6)
-                Text(reading.map { "H:\($0.degrees($0.high, fahrenheit: fahrenheit)) L:\($0.degrees($0.low, fahrenheit: fahrenheit))" } ?? "Tap to configure")
-                    .font(.system(size: size * 0.052)).foregroundStyle(.white.opacity(0.75))
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                if !demo, reading != nil {
-                    Text("Open-Meteo · \(fahrenheit ? "°F" : "°C")").font(.system(size: size * 0.035)).foregroundStyle(.gray)
-                }
-            }.frame(width: size * 0.86, alignment: .leading)
-                .frame(width: size, height: size).background(.black).contentShape(Rectangle())
-        }.accessibilityElement(children: .combine).accessibilityIdentifier("overviewWeather")
+        return VStack(spacing: 0) {
+            Button(action: configureWeather) {
+                VStack(alignment: .leading, spacing: size * 0.015) {
+                    Text(demo ? "Philadelphia" : weather.city?.name ?? "Weather")
+                        .font(.system(size: size * 0.063, weight: .medium)).foregroundStyle(yellow)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Text(reading.map { $0.degrees($0.temperature, fahrenheit: fahrenheit) } ?? "—°")
+                        .font(.system(size: size * 0.40, weight: .light)).tracking(-size * 0.02)
+                        .lineLimit(1).minimumScaleFactor(0.65)
+                    Image(systemName: reading?.symbol ?? "cloud")
+                        .symbolRenderingMode(.palette).foregroundStyle(.white, yellow)
+                        .font(.system(size: size * 0.085))
+                    Text(status).font(.system(size: size * 0.058)).lineLimit(1).minimumScaleFactor(0.6)
+                    Text(reading.map { "H:\($0.degrees($0.high, fahrenheit: fahrenheit)) L:\($0.degrees($0.low, fahrenheit: fahrenheit))" } ?? "Tap to configure")
+                        .font(.system(size: size * 0.052)).foregroundStyle(.white.opacity(0.75))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                }.frame(width: size * 0.86, alignment: .leading)
+                    .frame(width: size, height: size - (!demo && reading?.source != nil ? 30 : 0))
+                    .background(.black).contentShape(Rectangle())
+            }.accessibilityElement(children: .combine).accessibilityIdentifier("overviewWeather")
+            if !demo, let source = reading?.source {
+                AppleWeatherAttribution(source: source, onDark: true).frame(height: 30)
+            }
+        }.frame(width: size, height: size).background(.black)
     }
 }

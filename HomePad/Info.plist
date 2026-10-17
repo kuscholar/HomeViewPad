@@ -23,7 +23,7 @@
 	<key>NSHomeKitUsageDescription</key>
 	<string>HomeViewPad shows your home accessories, runs scenes you select, and displays cameras only when you open them.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Show weather for your current city. If location is unavailable, HomeViewPad uses Philadelphia. Approximate coordinates are sent to Open-Meteo for weather.</string>
+	<string>Show weather for your current city. If location is unavailable, HomeViewPad uses Philadelphia. Approximate coordinates are sent to Apple Weather for weather.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>While foreground standby is dimmed, detect sound levels to wake the display or start a short TrueDepth check. No audio is recorded or uploaded.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

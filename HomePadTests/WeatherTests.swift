@@ -21,22 +21,43 @@ private actor WeatherStub: WeatherProviding {
 }
 
 final class WeatherTests: XCTestCase {
-    private let json = #"{"current":{"time":1792032300,"temperature_2m":21.0,"weather_code":0,"is_day":0},"daily":{"temperature_2m_max":[26.8],"temperature_2m_min":[18.1]}}"#
-    func testWeatherResponseUnitsNightAndMalformedData() throws {
-        let reading = try OpenMeteoClient.decode(Data(json.utf8))
-        XCTAssertEqual(reading.temperature, 21)
+    private let source = WeatherSource(lightMarkURL: URL(string: "https://example.com/light.png")!,
+                                       darkMarkURL: URL(string: "https://example.com/dark.png")!,
+                                       legalURL: URL(string: "https://example.com/sources")!)
+    func testAppleWeatherUnitsConditionSymbolAndAttribution() throws {
+        let date = Date(timeIntervalSince1970: 1792032300)
+        let reading = try AppleWeatherClient.reading(temperature: .init(value: 69.8, unit: .fahrenheit),
+            high: .init(value: 300, unit: .kelvin), low: .init(value: 18.1, unit: .celsius),
+            condition: "Clear", symbol: "moon.stars.fill", date: date, source: source)
+        XCTAssertEqual(reading.temperature, 21, accuracy: 0.001)
+        XCTAssertEqual(reading.high, 26.85, accuracy: 0.001)
         XCTAssertEqual(reading.degrees(reading.temperature, fahrenheit: true), "70°")
         XCTAssertEqual(reading.degrees(reading.temperature, fahrenheit: false), "21°")
+        XCTAssertEqual(reading.condition, "Clear")
         XCTAssertEqual(reading.symbol, "moon.stars.fill")
-        XCTAssertEqual(reading.date.timeIntervalSince1970, 1792032300)
-        XCTAssertThrowsError(try OpenMeteoClient.decode(Data(json.replacingOccurrences(of: "[26.8]", with: "[null]").utf8)))
-        XCTAssertThrowsError(try OpenMeteoClient.decode(Data(json.replacingOccurrences(of: "[18.1]", with: "[]").utf8)))
-        XCTAssertThrowsError(try OpenMeteoClient.decode(Data("{\"error\":true}".utf8)))
-        let url = OpenMeteoClient.forecastURL(.philadelphia)
-        XCTAssertEqual(url.host, "api.open-meteo.com")
-        let parameters = URLComponents(url: url, resolvingAgainstBaseURL: false)!.queryItems!
-        XCTAssertTrue(parameters.contains(URLQueryItem(name: "timeformat", value: "unixtime")))
-        XCTAssertTrue(parameters.contains(URLQueryItem(name: "temperature_unit", value: "celsius")))
+        XCTAssertEqual(reading.date, date)
+        XCTAssertEqual(reading.source, source)
+    }
+    func testAppleWeatherRejectsInvalidValues() {
+        for (temperature, high, low) in [(Double.nan, 20.0, 10.0), (15.0, Double.infinity, 10.0), (15.0, 10.0, 20.0)] {
+            XCTAssertThrowsError(try AppleWeatherClient.reading(temperature: .init(value: temperature, unit: .celsius),
+                high: .init(value: high, unit: .celsius), low: .init(value: low, unit: .celsius),
+                condition: "Cloudy", symbol: "cloud.fill", date: .now, source: source))
+        }
+    }
+    @MainActor func testUnavailableServiceNeverSubstitutesSampleWeatherAndRetriesAreThrottled() async {
+        let name = "WeatherTests.\(UUID())", stub = WeatherStub()
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let store = WeatherStore(defaults: defaults, client: stub)
+        await stub.setFailure()
+        let now = Date.now
+        await store.refresh(now: now)
+        await store.refresh(now: now.addingTimeInterval(60))
+        var calls = await stub.calls
+        XCTAssertEqual(calls, 1); XCTAssertTrue(store.failed); XCTAssertNil(store.reading)
+        await store.refresh(now: now.addingTimeInterval(121))
+        calls = await stub.calls; XCTAssertEqual(calls, 2)
     }
     @MainActor func testDemoDoesNotRequestWeatherAndCitySelectionPersists() async {
         let name = "WeatherTests.\(UUID())", stub = WeatherStub()

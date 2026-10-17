@@ -58,7 +58,7 @@ A 15-second edit of a fresh simulator recording, with faster playback and the lo
 | **Controls with a purpose** | **A little less interface** |
 | Select a home, filter rooms, control supported accessories, and confirm before running a scene. Thermostat arrows follow the device's supported steps and limits. | Swipe between pages and through distinct widget stacks. Position dots appear during switching, then get out of the way. |
 
-Prefer lights out? **Overview** puts just four square widgets on pure black: date, a numbered analog clock, your album, and weather. White type, yellow accents, no glass. It is now the first page. Live weather comes from [Open-Meteo](https://open-meteo.com/): Philadelphia by default, your city after Apple Location Services permission, or a city you choose. Tap weather to search, refresh, or switch °C/°F. Demo weather stays fixed and labeled.
+Prefer lights out? **Overview** puts just four square widgets on pure black: date, a numbered analog clock, your album, and weather. White type, yellow accents, no glass. It is now the first page. Live weather comes from [Apple WeatherKit](https://developer.apple.com/weatherkit/): Philadelphia by default, your city after Apple Location Services permission, or a city you choose. Tap weather to search, refresh, or switch °C/°F. Demo weather stays fixed and labeled.
 
 Also included: optional HomeKit camera viewing, opt-in calendar and reminders, local audio playback with the system AirPlay picker, and foreground screen-awake mode. Experimental **Standby and wake** keeps the app unlocked, keeps the dashboard visible at minimum screen brightness, and restores brightness on touch or sound. Sound directly wakes the display by default, with adjustable sensitivity. Optional TrueDepth requires a nearby face after sound; the camera stays off between checks. Demo mode works without accessories and never initializes the real HomeKit manager.
 
@@ -90,9 +90,10 @@ Choose the **HomePad** scheme and an iPad simulator running iPadOS 17 or later. 
 
 1. Copy `Config/Local.xcconfig.example` to `Config/Local.xcconfig`.
 2. Enter your own unique bundle identifier and development team. The local file is ignored by Git.
-3. Connect your iPad and build with the **HomePad** scheme. Your account must support HomeKit provisioning; complete Apple's trust and Developer Mode prompts as needed.
-4. Swipe left to **Home**, tap **Connect Apple Home**, grant access, and choose your home. Set up accessories and scenes in Apple's Home app first.
-5. Open the photo widget to choose one photo or connect an album. Limited Photos permission displays only your allowed images.
+3. Connect your iPad and build with the **HomePad** scheme. Your account must support HomeKit and WeatherKit provisioning; complete Apple's trust and Developer Mode prompts as needed.
+4. For live weather, enable **WeatherKit** under both Capabilities and App Services for your App ID in Apple Developer → Certificates, Identifiers & Profiles. Refresh automatic signing in Xcode. A paid Apple Developer Program membership is required; unsigned simulator builds may show an explicit weather-unavailable state. See [WeatherKit setup](https://developer.apple.com/help/account/identifiers/enable-app-capabilities/).
+5. Swipe left to **Home**, tap **Connect Apple Home**, grant access, and choose your home. Set up accessories and scenes in Apple's Home app first.
+6. Open the photo widget to choose one photo or connect an album. Limited Photos permission displays only your allowed images.
 
 HomePod mini is optional. Add it to your home using Apple's Home app; select it in the system AirPlay picker when playing a local audio file. For Apple Music, use Apple's Music app and its system audio routing.
 
@@ -104,7 +105,7 @@ The display name is **HomeViewPad**; the project, scheme, and source directory r
 
 No app account, app-owned backend, analytics, or tracking SDK. HomeKit, PhotoKit, EventKit, and AirPlay use public Apple APIs and system permissions. Calendar and reminders stay hidden until you opt in.
 
-Weather sends city searches and coordinates to Open-Meteo. Automatic location uses Apple's foreground permission and city lookup; weather coordinates are rounded to about 1 km and automatically detected coordinates are not saved to disk. Manual city and unit choices are saved locally. Offline readings are labeled as cached. The free weather endpoint is for personal/non-commercial use; a commercial release needs a suitable [Open-Meteo plan](https://open-meteo.com/en/pricing) or another licensed provider.
+Weather and city searches use Apple services: native WeatherKit for conditions/forecasts, and Core Location geocoding for city lookup. Automatic location uses Apple's foreground permission; weather coordinates are rounded to about 1 km and automatically detected coordinates are not saved to disk. Manual city and unit choices are saved locally. Cached/offline readings are labeled. The weather tile and panel link Apple's required attribution. No Open-Meteo endpoint or third-party API key is used. WeatherKit includes 500,000 calls per month per paid developer membership (shared across users); commercial apps are supported under [Apple's terms](https://developer.apple.com/weatherkit/), and higher usage needs an appropriate plan. Normal refreshes are limited to once every 15 minutes while visible; no weather refresh occurs during standby or in the background.
 
 Album photos are loaded on demand; iCloud may download them through PhotoKit. A single imported photo is stored in the app sandbox. The app never edits your Photos library. **A shared screen is still a shared screen:** anyone nearby can see the content you choose to display. [Data lifecycle →](docs/ARCHITECTURE.md)
 

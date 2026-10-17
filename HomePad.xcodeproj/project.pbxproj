@@ -196,6 +196,7 @@
 "name" = "Debug";
 "buildSettings" = {
 "SWIFT_VERSION" = "5.0";
+"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG";
 "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
 "SDKROOT" = "iphoneos";
 "TARGETED_DEVICE_FAMILY" = "2";
@@ -223,6 +224,7 @@
 "name" = "Release";
 "buildSettings" = {
 "SWIFT_VERSION" = "5.0";
+"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "";
 "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
 "SDKROOT" = "iphoneos";
 "TARGETED_DEVICE_FAMILY" = "2";
@@ -333,6 +335,7 @@
 "name" = "Debug";
 "buildSettings" = {
 "SWIFT_VERSION" = "5.0";
+"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG";
 "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
 "SDKROOT" = "iphoneos";
 "TARGETED_DEVICE_FAMILY" = "2";
@@ -354,6 +357,7 @@
 "name" = "Release";
 "buildSettings" = {
 "SWIFT_VERSION" = "5.0";
+"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "";
 "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
 "SDKROOT" = "iphoneos";
 "TARGETED_DEVICE_FAMILY" = "2";
@@ -438,6 +442,7 @@
 "name" = "Debug";
 "buildSettings" = {
 "SWIFT_VERSION" = "5.0";
+"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG";
 "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
 "SDKROOT" = "iphoneos";
 "TARGETED_DEVICE_FAMILY" = "2";
@@ -458,6 +463,7 @@
 "name" = "Release";
 "buildSettings" = {
 "SWIFT_VERSION" = "5.0";
+"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "";
 "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
 "SDKROOT" = "iphoneos";
 "TARGETED_DEVICE_FAMILY" = "2";
@@ -506,6 +512,7 @@
 "name" = "Debug";
 "buildSettings" = {
 "SWIFT_VERSION" = "5.0";
+"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG";
 "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
 "SDKROOT" = "iphoneos";
 "TARGETED_DEVICE_FAMILY" = "2";
@@ -522,6 +529,7 @@
 "name" = "Release";
 "buildSettings" = {
 "SWIFT_VERSION" = "5.0";
+"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "";
 "IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
 "SDKROOT" = "iphoneos";
 "TARGETED_DEVICE_FAMILY" = "2";
