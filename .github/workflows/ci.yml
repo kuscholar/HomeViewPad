@@ -25,13 +25,13 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       IOS_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-26-5
-      DERIVED_DATA_PATH: ${{ runner.temp }}/HomePadDerived
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
       - name: Toolchain and generated-project consistency
         run: |
+          echo "DERIVED_DATA_PATH=$RUNNER_TEMP/HomePadDerived" >> "$GITHUB_ENV"
           xcodebuild -version
           sw_vers
           python3 scripts/generate_project.py
