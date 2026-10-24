@@ -30,7 +30,7 @@ for name, folder, productType, ext in [('HomePad','HomePad','application','app')
     settings={'PRODUCT_BUNDLE_IDENTIFIER':'org.homepad.personal.'+name.lower(),'PRODUCT_NAME':'$(TARGET_NAME)','GENERATE_INFOPLIST_FILE':'YES'}
     dependencies=[]
     if name=='HomePad':
-        settings.update({'PRODUCT_BUNDLE_IDENTIFIER':'$(HOMEVIEWPAD_BUNDLE_IDENTIFIER)','DEVELOPMENT_TEAM':'$(HOMEVIEWPAD_DEVELOPMENT_TEAM)','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','INFOPLIST_FILE':'HomePad/Info.plist','GENERATE_INFOPLIST_FILE':'NO','CODE_SIGN_ENTITLEMENTS':'HomePad/HomePad.entitlements','MARKETING_VERSION':'1.0','CURRENT_PROJECT_VERSION':'1','SUPPORTED_PLATFORMS':'iphoneos iphonesimulator','SUPPORTS_MACCATALYST':'NO'})
+        settings.update({'PRODUCT_BUNDLE_IDENTIFIER':'$(HOMEVIEWPAD_BUNDLE_IDENTIFIER)','DEVELOPMENT_TEAM':'$(HOMEVIEWPAD_DEVELOPMENT_TEAM)','ASSETCATALOG_COMPILER_APPICON_NAME':'AppIcon','INFOPLIST_FILE':'HomePad/Info.plist','GENERATE_INFOPLIST_FILE':'NO','CODE_SIGN_ENTITLEMENTS':'HomePad/HomePad.entitlements','MARKETING_VERSION':'0.1.0','CURRENT_PROJECT_VERSION':'1','SUPPORTED_PLATFORMS':'iphoneos iphonesimulator','SUPPORTS_MACCATALYST':'NO'})
     else:
         proxy=add(name+'proxy',isa='PBXContainerItemProxy',containerPortal=ident('project'),proxyType='1',remoteGlobalIDString=ident('HomePadtarget'),remoteInfo='HomePad')
         dependencies=[add(name+'dependency',isa='PBXTargetDependency',target=ident('HomePadtarget'),targetProxy=proxy)]

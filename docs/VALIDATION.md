@@ -1,5 +1,16 @@
 # Validation
 
+## OSS infrastructure and source-preview preparation — 2026-10-24
+
+App behavior and layouts are unchanged. Added CI, contributor/security guidance, isolated simulator setup, explicit test lanes, and source-release documentation. Version 0.1.0 is set in both generator and generated project.
+
+- Xcode 27.0 (27A266a), macOS 27.0.1, iPad Pro 11-inch (M5), iPadOS 27.0 Simulator. The new setup script created a separate simulator successfully. The new runner executed the [Release weather suite](evidence/oss-release-summary.json): **8 passed, zero failures/skips**. The unsigned iPad SDK Release build succeeded; its Info.plist reports 0.1.0. Binary inspection found no Open-Meteo endpoints, Debug provider-picker/preference identifiers, or weather-preview flag. This is not a signed installation.
+- Project regeneration is deterministic and preserves the ignored local signing override. Plists, shell/Python syntax, workflow/issue-template YAML, documentation links, and whitespace checks passed. A temporary xcodebuild stub verified that the runner preserves a failure exit code and prints the result path. No layout changes require new app screenshots.
+- CI is configured on the standard public-repository macOS 26 runner with Xcode 26.6/iPadOS 26.5; that remote configuration is **not yet verified** at this commit. Debug CI explicitly excludes the three live weather/geocoding UI checks; manual dispatch can run them separately. No remote green result is claimed before execution.
+- A fresh full Debug baseline run is in progress and will be recorded separately. Historical results below remain tied to their original runs.
+- Focused source review covered HomeKit write/permission guards, PhotoKit cancellation/storage, personal-data clearing, weather-provider isolation, camera muting, and standby sensor lifecycle. No new credentials or services were added. GitHub private vulnerability reporting was enabled and read back as enabled. This is not a comprehensive security audit.
+- No physical accessory, WeatherKit authorization, AirPlay, standby wake/brightness, or endurance tests were performed. Historical install/launch evidence is now distinguished from unverified features in HARDWARE_CHECKLIST.md. Existing Swift async/capture advisory warnings remain; the build passed, not warning-free.
+
 ## Debug weather-provider selection and WeatherKit-only Release — 2026-10-17
 
 Debug now defaults to Open-Meteo and exposes an Open-Meteo / WeatherKit selector inside the weather panel. Selection survives relaunch; changing providers clears readings, search results and error backoff while preserving the city, units and location-following choice. Late results from an earlier provider are discarded, including an A → B → A switch. There is no automatic provider fallback. Release excludes Open-Meteo and the selector at compile time and ignores saved Debug provider preferences.

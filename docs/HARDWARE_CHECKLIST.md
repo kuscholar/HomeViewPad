@@ -1,8 +1,9 @@
-# Physical hardware validation — NOT YET VERIFIED
+# Physical hardware validation — partial evidence, feature checks pending
 
 Simulator success does not establish any of the following. Use an iPad and a HomePod mini owned by you, with a disposable/test accessory where practical.
 
-- [ ] Select a personal signing team and unique bundle identifier. Confirm HomeKit entitlement provisioning succeeds, install on iPad, and launch without signing warnings.
+- [x] Historical Debug installation and launch: iPad Pro 11-inch (iPad8,1), iPadOS 26.6, 2026-10-15. See [validation evidence](VALIDATION.md#physical-ipad-installation-of-standby-build--2026-10-15). This does not validate the current Release, WeatherKit authorization, or accessory behavior.
+- [ ] On the release candidate, configure your own signing identity, confirm HomeKit and WeatherKit entitlements, install, and launch.
 - [ ] Deny Home permission; verify denied state and Settings recovery. Grant, return, retry, and verify the correct home's actual accessories appear.
 - [ ] Check multiple homes and home selection. Revoke permission while suspended and verify no stale controls or personal data remain visible on return.
 - [ ] Switch a test light on/off repeatedly; compare physical state and the Apple Home app. Disconnect accessory power/Wi-Fi and confirm offline status; restore and retry.
@@ -20,7 +21,7 @@ Simulator success does not establish any of the following. Use an iPad and a Hom
 - [ ] Test near/far, portrait/landscape, split view, largest Dynamic Type, VoiceOver, Voice Control, external keyboard, Reduce Motion and increased contrast. Verify touch targets and text remain usable.
 - [ ] Enable foreground-awake; verify it resets on leaving HomeViewPad. Validate Guided Access manually if wanted. Observe long-running heat, power, OLED/LCD wear considerations, charging and mounting under actual conditions.
 
-No physical-device, HomePod, camera, AirPlay, EventKit-permission, or long-duration hardware validation is claimed by the simulator suite.
+Simulator results do not certify physical behavior. Historical installation/launch and microphone-input observations are recorded separately; HomeKit actions, HomePod, camera, AirPlay, EventKit permissions, and long-duration behavior remain pending.
 
 ## Foreground standby — physical wake validation in progress
 
@@ -34,3 +35,11 @@ On 2026-10-15, the owner's iPad Pro 11-inch (iPadOS 26.6) showed its dashboard a
 - [ ] Time capture startup/shutdown on success, no face, timeout, repeated sound, backgrounding and interruption. Verify the three-second cancellation request and 15-second failed-check cooldown. Confirm old callbacks cannot wake or restart capture after cancellation.
 - [ ] Test playback/AirPlay, incoming audio interruptions, headphone/Bluetooth route changes, and permission prompts. Confirm standby pauses during app playback, audio-session settings recover, and input failures restore brightness and show an error instead of leaving a dimmed display.
 - [ ] Compare at least 30 minutes of idle display, sound-only and sound + TrueDepth standby: power, warmth, brightness stability, LCD glow/OLED behavior and privacy indicators. Do not claim true display-off or energy savings without measurements.
+
+## Reproducible reporting protocol
+
+Prioritize permission handling, one harmless light, foreground standby, WeatherKit, then display endurance. Never test locks or consequential scenes just to complete this checklist. For each row record date, commit, Debug/Release, iPad model/OS, accessory model, permissions, steps, expected result, observed result, and pass/fail/not tested. Keep device IDs, home names, photographs, signing identity, and raw logs private. A failure is useful evidence; leave its checkbox open.
+
+For display endurance, record starting brightness, power source, ambient conditions, battery/thermal observations, and interruptions after 30 minutes and again after at least four hours. Compare the same conditions with standby disabled and enabled before making energy claims. Background/lock the app during the run and check brightness recovery and privacy indicators.
+
+For WeatherKit, confirm actual signed entitlement/profile and a fresh attributed reading, then test airplane/offline state and recovery. An explicit unavailable state or TEST WEATHER fixture is not a successful authorized response. No new physical tests were performed during the OSS infrastructure audit.

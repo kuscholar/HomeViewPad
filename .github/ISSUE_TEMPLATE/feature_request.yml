@@ -1,0 +1,22 @@
+name: Focused improvement
+description: Suggest a scoped improvement or contribution.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: What is difficult today? Include a concrete scenario.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed scope and alternatives
+      description: Preserve native architecture, privacy, public Apple APIs, and no backend requirement.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Acceptance evidence
+      description: How would we verify it? Mention required devices, permissions, and whether you can help.

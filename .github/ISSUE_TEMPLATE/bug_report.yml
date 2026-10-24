@@ -1,0 +1,35 @@
+name: Bug report
+description: Report a reproducible app or build problem.
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include personal photos, home identifiers, signing details, or tokens. Use SECURITY.md for vulnerabilities."
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: iPad model or simulator, iPadOS, Xcode, commit/tag, Debug or Release.
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Demo
+        - Real home
+        - Build or test tooling
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected result, and actual result
+      description: Include permission state and reproducibility. Use a harmless test accessory.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence and limitations
+      description: Test output or screenshots, if safe to share. Distinguish simulator and physical observations.

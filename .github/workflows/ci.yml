@@ -1,0 +1,92 @@
+name: iPad simulator
+on:
+  push:
+    branches: [main]
+    paths: ['HomePad/**', 'HomePadTests/**', 'HomePadUITests/**', 'HomePad.xcodeproj/**', 'Config/**', 'scripts/**', '.github/workflows/**']
+  pull_request:
+    paths: ['HomePad/**', 'HomePadTests/**', 'HomePadUITests/**', 'HomePad.xcodeproj/**', 'Config/**', 'scripts/**', '.github/workflows/**']
+  workflow_dispatch:
+    inputs:
+      live_services:
+        description: Also run the three live weather/geocoding tests (network-dependent)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: simulator-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    # Standard public-repository runner only; never enable paid usage on private forks implicitly.
+    if: github.event.repository.private == false
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      IOS_RUNTIME: com.apple.CoreSimulator.SimRuntime.iOS-26-5
+      DERIVED_DATA_PATH: ${{ runner.temp }}/HomePadDerived
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Toolchain and generated-project consistency
+        run: |
+          xcodebuild -version
+          sw_vers
+          python3 scripts/generate_project.py
+          git diff --exit-code -- HomePad.xcodeproj HomePad/Info.plist HomePad/HomePad.entitlements HomePad/HomePadDebug.entitlements
+          mkdir -p .validation/ci
+      - name: Prepare isolated iPad and synthetic photos
+        run: |
+          simulator=$(python3 scripts/create_test_simulator.py)
+          echo "SIMULATOR_UUID=$simulator" >> "$GITHUB_ENV"
+          xcrun simctl boot "$simulator"
+          xcrun simctl bootstatus "$simulator" -b
+          python3 scripts/seed_test_photos.py "$simulator"
+          xcrun simctl location "$simulator" set 39.9526,-75.1652
+      - name: Debug unit and UI tests (excluding three live-service checks)
+        env:
+          RESULT_BUNDLE_PATH: ${{ github.workspace }}/.validation/ci/Debug.xcresult
+        run: |
+          set -o pipefail
+          sh scripts/test.sh "$SIMULATOR_UUID" ci 2>&1 | tee .validation/ci/debug.log
+      - name: Release weather regression tests
+        env:
+          RESULT_BUNDLE_PATH: ${{ github.workspace }}/.validation/ci/Release.xcresult
+        run: |
+          set -o pipefail
+          sh scripts/test.sh "$SIMULATOR_UUID" release 2>&1 | tee .validation/ci/release.log
+      - name: Unsigned device Release build
+        run: |
+          set -o pipefail
+          xcodebuild -project HomePad.xcodeproj -scheme HomePad -configuration Release -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/DeviceRelease" CODE_SIGNING_ALLOWED=NO build 2>&1 | tee .validation/ci/device-build.log
+      - name: Live-service UI checks (opt-in, not hardware validation)
+        if: github.event_name == 'workflow_dispatch' && inputs.live_services
+        env:
+          RESULT_BUNDLE_PATH: ${{ github.workspace }}/.validation/ci/Network.xcresult
+        run: |
+          set -o pipefail
+          sh scripts/test.sh "$SIMULATOR_UUID" network 2>&1 | tee .validation/ci/network.log
+      - name: Test summaries
+        if: always()
+        run: |
+          echo '## HomePad test evidence' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Debug CI excludes 3 live-service checks. Simulator results do not certify physical HomeKit, WeatherKit authorization, AirPlay, or standby performance.' >> "$GITHUB_STEP_SUMMARY"
+          for bundle in .validation/ci/*.xcresult; do
+            [ -d "$bundle" ] || continue
+            summary="${bundle%.xcresult}-summary.json"
+            xcrun xcresulttool get test-results summary --path "$bundle" > "$summary"
+            python3 scripts/summarize_tests.py "$summary" >> "$GITHUB_STEP_SUMMARY"
+          done
+      - name: Retain synthetic test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: simulator-test-evidence
+          path: .validation/ci/
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Shut down test simulator
+        if: always() && env.SIMULATOR_UUID != ''
+        run: xcrun simctl shutdown "$SIMULATOR_UUID"

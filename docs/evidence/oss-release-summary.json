@@ -1,0 +1,13 @@
+{
+  "title": "Test - HomePad",
+  "result": "Passed",
+  "totalTestCount": 8,
+  "passedTests": 8,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "startTime": 1792860367.351,
+  "finishTime": 1792860424.058,
+  "configuration": "Release; WeatherTests only",
+  "toolchain": "Xcode 27.0 (27A266a)",
+  "runtime": "iPadOS 27.0 Simulator, iPad Pro 11-inch (M5)"
+}

@@ -2,7 +2,7 @@
   <img src="docs/media/homeviewpad-logo.png" width="128" height="128" alt="HomeViewPad — a glass window into your home">
 </p>
 <h1 align="center">HomeViewPad</h1>
-<p align="center"><strong>We have HomeView at home.</strong><br>An iPad. A HomePod mini. A little rearranging.</p>
+<p align="center"><strong>A useful second life for an iPad.</strong><br>A native dashboard for Apple Home, photos, and time.</p>
 <p align="center">
   <img src="https://img.shields.io/badge/iPadOS-17%2B-145C50?style=flat-square" alt="iPadOS 17 or later">
   <img src="https://img.shields.io/badge/Built_with-SwiftUI-145C50?style=flat-square" alt="Built with SwiftUI">
@@ -17,11 +17,11 @@
 
 ## Before you buy another screen, check the drawer.
 
-[Apple HomeView](https://www.apple.com/apple-homeview/) brings a screen, speakers, and home controls together. We looked around the living room and thought: **hang on, we own most of those nouns.**
+An existing iPad can serve as an accessible, shared display for everyday home controls, photos, and time. HomeViewPad brings those tasks together without an app account or app-owned server.
 
 HomeViewPad gives a spare iPad a new job: a beautiful Apple Home dashboard, a clock you can read across the room, and a photo frame that finally does something with your albums. Put a HomePod mini beside it—or give them a shared stand—and you've got your own little smart-home corner.
 
-**Some assembly required. Keynote sold separately.**
+This is an early, MIT-licensed source preview for people comfortable building with Xcode.
 
 <p align="center">
   <img src="docs/media/ipad-homepod-use-case.png" width="960" alt="An iPad running HomeViewPad next to a HomePod mini on a sideboard">
@@ -37,7 +37,7 @@ HomeViewPad gives a spare iPad a new job: a beautiful Apple Home dashboard, a cl
 | **A HomePod mini, if you have one** | Siri, supported home-hub functions, and a speaker—through Apple's own features. |
 | **A stand and a power outlet** | The industrial design department. |
 
-The iPad runs the app. HomePod mini works independently in your Apple Home setup; it isn't directly paired with HomeViewPad. This covers everyday dashboard jobs, **not every HomeView feature**: no built-in Siri AI, household recognition, integrated FaceTime, or Intercom. Those distinctions are real, even if the stand is homemade.
+The iPad runs the app. HomePod mini works independently in your Apple Home setup; it isn't directly paired with HomeViewPad. Apple Home remains responsible for setup, permissions, and automations. HomeViewPad is a foreground dashboard: it does not provide Siri, household recognition, integrated FaceTime, or Intercom.
 
 ## The demo
 
@@ -115,13 +115,21 @@ Album photos are loaded on demand; iCloud may download them through PhotoKit. A 
 <details>
 <summary><strong>The small print, in normal-sized words</strong></summary>
 
-This is an early independent project, not an Apple product or a complete HomeView replacement. HomeViewPad is not a home hub and cannot access a HomePod microphone, host Siri, send Intercom messages, or embed FaceTime.
+This is an early independent project, not an Apple product or a replacement for Apple Home. HomeViewPad is not a home hub and cannot access a HomePod microphone, host Siri, send Intercom messages, or embed FaceTime.
 
 It does not create automations or directly edit locks, blinds, or thermostat modes. Existing scenes can contain those actions, so scene execution always asks for confirmation. There is no Apple Music catalog integration or background camera recording. Standby is opt-in under Settings → Standby and wake. It cannot unlock iPad or reopen the app. Enabling standby requests the needed permissions. Missing permissions or microphone failures keep or restore normal brightness and show the reason. The microphone runs while dimmed; TrueDepth checks use the front image and depth for up to three seconds, with system privacy indicators. Quiet arrivals can be missed, and real-device detection, power use, and dark-room performance remain unverified. Devices without TrueDepth can use Sound or touch; there is no regular-camera fallback.
 
 Simulator tests cover app logic and interface flows. Real accessory compatibility, camera streaming, AirPlay, and long-running wall-display behavior still require [hardware validation](docs/HARDWARE_CHECKLIST.md). [What we've actually tested →](docs/VALIDATION.md)
 
 </details>
+
+## Project status and contributing
+
+[![iPad simulator CI](https://github.com/kuscholar/HomeViewPad/actions/workflows/ci.yml/badge.svg)](https://github.com/kuscholar/HomeViewPad/actions/workflows/ci.yml)
+
+The badge reports the remote workflow, not hardware readiness. CI runs Debug unit/UI checks, Release weather regressions, and an unsigned device build. Three live weather/geocoding tests are separate opt-in checks. See [actual results and toolchains](docs/VALIDATION.md), [hardware checks](docs/HARDWARE_CHECKLIST.md), and [source-release instructions](docs/RELEASING.md). No App Store version or signed downloadable binary is provided.
+
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) for a fresh simulator, synthetic photos, test modes, and PR expectations. The [roadmap](docs/ROADMAP.md) lists bounded contribution opportunities. Please follow our [code of conduct](CODE_OF_CONDUCT.md), report vulnerabilities [privately](SECURITY.md), and read the [changelog](CHANGELOG.md).
 
 ## Make it yours
 
@@ -155,4 +163,4 @@ Follow [AGENTS.md](AGENTS.md): public APIs, original or licensed assets, no empl
 
 [MIT license](LICENSE) · [Architecture](docs/ARCHITECTURE.md) · [Validation](docs/VALIDATION.md) · [Media credits](docs/MEDIA.md)
 
-Apple, Apple HomeView, iPad, HomePod mini, HomeKit, and AirPlay belong to Apple Inc. HomeViewPad is an independent project, not affiliated with or endorsed by Apple or other similarly named products. The DIY comparison describes overlapping use cases, not feature parity.
+Apple, iPad, HomePod mini, HomeKit, and AirPlay belong to Apple Inc. HomeViewPad is an independent project, not affiliated with or endorsed by Apple or other similarly named products. The DIY comparison describes overlapping use cases, not feature parity.

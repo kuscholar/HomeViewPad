@@ -2,7 +2,7 @@
   <img src="media/homeviewpad-logo.png" width="128" height="128" alt="HomeViewPad：一扇看见家的玻璃窗">
 </p>
 <h1 align="center">HomeViewPad</h1>
-<p align="center"><strong>想要 HomeView？先翻翻抽屉。</strong><br>一台 iPad，一个 HomePod mini，再加一点重新摆放的智慧。</p>
+<p align="center"><strong>让闲置 iPad 重新发挥作用。</strong><br>原生 Apple Home 控制、照片与时钟面板。</p>
 <p align="center">
   <img src="https://img.shields.io/badge/iPadOS-17%2B-145C50?style=flat-square" alt="iPadOS 17 或以上">
   <img src="https://img.shields.io/badge/Built_with-SwiftUI-145C50?style=flat-square" alt="使用 SwiftUI 构建">
@@ -13,13 +13,13 @@
 
 ---
 
-## 苹果发布了 HomeView。我们重新整理了一下桌面。
+## 买新屏幕之前，先看看已有的 iPad。
 
-看完 [Apple HomeView](https://www.apple.com/apple-homeview/)，再看看手里的 iPad 和旁边的 HomePod mini，突然觉得：**屏幕有了，音箱有了，好像就差让它们坐一桌。**
+已有的 iPad 可以成为方便查看家庭状态、操作配件和展示照片的共享屏幕。HomeViewPad 将这些日常用途集中起来，无需 App 账号或自建后端。
 
 HomeViewPad 给闲置 iPad 安排了一份新工作：控制家里的灯和温度，显示一眼就能看清的时钟，再把相册里的照片搬进客厅。把 HomePod mini 放在旁边，或者给它们找个共同的支架，一个 DIY 家庭面板就有了雏形。
 
-**发布会没有。支架可以有。**
+这是采用 MIT 许可的早期源码预览，需要使用 Xcode 构建。
 
 <p align="center">
   <img src="media/ipad-homepod-use-case.png" width="960" alt="运行 HomeViewPad 的 iPad 与 HomePod mini 并排摆在家中">
@@ -35,13 +35,13 @@ HomeViewPad 给闲置 iPad 安排了一份新工作：控制家里的灯和温�
 | **可选的 HomePod mini** | 通过 Apple 自身功能提供 Siri、支持的家庭中枢功能和音频播放。 |
 | **一个支架，一个插座** | 工业设计部门。 |
 
-iPad 跑 App，HomePod mini 在 Apple Home 中独立工作。这套组合能覆盖看照片、看时间、点按控家等日常用途；**并不等于拥有 HomeView 的全部功能**。内置 Siri AI、家庭成员识别、集成 FaceTime 和 Intercom，都不会因为我们买了一个支架就自动出现。
+iPad 跑 App，HomePod mini 在 Apple Home 中独立工作。Apple「家庭」App 仍负责设备配置、授权和自动化。HomeViewPad 是前台面板，不提供 Siri、家庭成员识别、集成 FaceTime 或 Intercom。
 
 ## 先看它干活
 
 <p align="center">
   <img src="media/demo.gif" width="880" alt="真实运行演示：温度调整、灯光、组件切换、时钟和三张照片轮播">
-  <br><sub>真实模拟器录屏 · 演示配件 · 作者提供的照片 · 约 90 秒</sub>
+  <br><sub>真实模拟器录屏 · 演示配件 · 作者提供的照片 · 约 15 秒</sub>
 </p>
 
 调一下温度，关一盏灯，滑过时钟，再让照片占满屏幕。
@@ -113,13 +113,21 @@ Release 天气和城市搜索只使用 Apple WeatherKit 与 Core Location。Debu
 <details>
 <summary><strong>玩笑归玩笑，能力边界写清楚</strong></summary>
 
-这是早期独立项目，不是 Apple 官方产品，也不完整替代 HomeView。App 本身不是家庭中枢，不承载 Siri、不访问 HomePod 麦克风，不支持 Intercom 或内嵌 FaceTime。
+这是早期独立项目，不是 Apple 官方产品，也不替代 Apple「家庭」App。App 本身不是家庭中枢，不承载 Siri、不访问 HomePod 麦克风，不支持 Intercom 或内嵌 FaceTime。
 
 目前不创建自动化，也不直接编辑门锁、窗帘或温控器模式。已有场景可能包含这些动作，因此执行场景前始终需要确认。没有 Apple Music 曲库、身份识别或后台摄像头录制。待机功能默认关闭，可在 Settings → Standby and wake 开启；不能解锁 iPad 或从后台打开 App。开启时会引导授权，权限缺失或麦克风启动失败会保持或恢复正常亮度并显示原因。麦克风仅在待机期间工作，TrueDepth 检测同时使用前置图像和深度，单次最多请求三秒，系统隐私指示灯会正常显示。安静经过可能漏检，真实设备上的识别率、耗电和暗室效果尚未验证。不支持 TrueDepth 的机型可选纯声音或触摸唤醒，不会改用普通摄像头。
 
 模拟器通过不等于硬件验证。真实配件、摄像头、HomePod/AirPlay 和长期常亮仍需要按[硬件清单](HARDWARE_CHECKLIST.md)验证。[实际测试记录 →](VALIDATION.md)
 
 </details>
+
+## 项目状态与贡献
+
+[![iPad 模拟器 CI](https://github.com/kuscholar/HomeViewPad/actions/workflows/ci.yml/badge.svg)](https://github.com/kuscholar/HomeViewPad/actions/workflows/ci.yml)
+
+徽章显示远端工作流状态，不代表硬件已验证。CI 执行 Debug 单元/UI 测试、Release 天气回归和未签名设备构建；三项依赖在线天气/地理编码的测试单独手动运行。请查看[实际测试记录](VALIDATION.md)、[硬件清单](HARDWARE_CHECKLIST.md)和[源码发布说明](RELEASING.md)。目前没有 App Store 版本或已签名的可下载安装包。
+
+[贡献指南](../CONTRIBUTING.md)说明全新模拟器、合成照片、测试模式与 PR 要求；[路线图](ROADMAP.md)提供可参与的小范围任务。请遵守[行为准则](../CODE_OF_CONDUCT.md)，[私下报告安全漏洞](../SECURITY.md)，并查看[更新记录](../CHANGELOG.md)。
 
 ## 一起把它做得更好
 
@@ -133,4 +141,4 @@ Release 天气和城市搜索只使用 Apple WeatherKit 与 Core Location。Debu
 
 [MIT 许可证](../LICENSE) · [架构](ARCHITECTURE.md) · [验证记录](VALIDATION.md) · [素材说明](MEDIA.md)
 
-Apple、Apple HomeView、iPad、HomePod mini、HomeKit 和 AirPlay 属于 Apple Inc.。HomeViewPad 与 Apple 及其他相似名称的产品没有关联或背书关系。文中的 DIY 类比指相近的日常用途，不表示功能完全一致。
+Apple、iPad、HomePod mini、HomeKit 和 AirPlay 属于 Apple Inc.。HomeViewPad 与 Apple 及其他相似名称的产品没有关联或背书关系。文中的 DIY 类比指相近的日常用途，不表示功能完全一致。
