@@ -32,6 +32,7 @@ struct StandbySoundGate {
     private var samples = 0
     private var peaks = 0
     private var armed = true
+    init(sensitivity: StandbySoundSensitivity = .standard) { self.sensitivity = sensitivity }
     mutating func consume(_ db: Float) -> Bool {
         guard db.isFinite else { return false }
         if samples < 12 { floor = samples == 0 ? db : floor * 0.8 + db * 0.2; samples += 1; return false }

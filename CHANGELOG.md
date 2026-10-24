@@ -17,6 +17,8 @@ First versioned source preview; see GitHub Releases for publication status.
 
 ### Corrected
 
+- Explicit sound-gate initialization supports Xcode 26.6 as well as Xcode 27 without changing sensitivity thresholds.
+
 - Chinese demo caption now matches the actual 15-second recording.
 - Hardware checklist distinguishes historical installation/launch from pending feature verification.
 - Project version is 0.1.0 in both generator and generated settings, replacing the unversioned starter value 1.0.
