@@ -1,8 +1,8 @@
 # Source releases
 
-## Current candidate: v0.1.0
+## First source preview: v0.1.0
 
-Use a **source preview / prerelease**, not a stable or App Store release. The project has no previous published tags/releases at the 2026-10-24 audit. Version 0.1.0 reflects the early scope; hardware limitations remain visible. MARKETING_VERSION is defined in `scripts/generate_project.py` and generated into the project. CURRENT_PROJECT_VERSION remains 1 for this first source release.
+Use a **source preview / prerelease**, not a stable or App Store release. The project had no published tags/releases at the start of the 2026-10-24 audit. The first prerelease uses the validated source plus documentation-only evidence updates. Version 0.1.0 reflects the early scope; hardware limitations remain visible. MARKETING_VERSION is defined in `scripts/generate_project.py` and generated into the project. CURRENT_PROJECT_VERSION remains 1 for this first source release.
 
 ## Release checklist
 

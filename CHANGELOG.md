@@ -2,7 +2,7 @@
 
 Changes describe shipped source, not App Store availability or certified hardware support.
 
-## 0.1.0 — source preview (release candidate)
+## 0.1.0 — 2026-10-24 — source preview
 
 First versioned source preview; see GitHub Releases for publication status.
 
