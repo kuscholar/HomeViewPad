@@ -5,9 +5,10 @@
   "passedTests": 8,
   "failedTests": 0,
   "skippedTests": 0,
-  "startTime": 1792860367.351,
-  "finishTime": 1792860424.058,
-  "configuration": "Release; WeatherTests only",
+  "startTime": 1792868234.703,
+  "finishTime": 1792868248.999,
+  "configuration": "Release WeatherTests after explicit sound-gate initializer",
+  "sourceCommit": "9ac50597e88e516335407283b90aea48cbd28ec5",
   "toolchain": "Xcode 27.0 (27A266a)",
   "runtime": "iPadOS 27.0 Simulator, iPad Pro 11-inch (M5)"
 }

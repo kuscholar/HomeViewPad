@@ -414,7 +414,8 @@ final class HomePadUITests: XCTestCase {
         app.launchArguments = ["--fresh", "--uitesting", "--weather-preview", "-weatherFollowsLocation", "NO", "-weatherFahrenheit", "YES"]
         app.launch()
         XCTAssertTrue(app.staticTexts["weatherPreviewBadge"].waitForExistence(timeout: 5))
-        let attribution = app.links["appleWeatherAttribution"]
+        // SwiftUI exposes Link as a button on iPadOS 26 and as a link on iPadOS 27.
+        let attribution = app.descendants(matching: .any)["appleWeatherAttribution"]
         XCTAssertTrue(attribution.waitForExistence(timeout: 5))
         for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
             XCUIDevice.shared.orientation = orientation
@@ -511,7 +512,8 @@ final class HomePadUITests: XCTestCase {
         if cancel.waitForExistence(timeout: 3) { cancel.tap() } else { app.swipeDown() }
         closePanel()
         panel("musicCard"); app.buttons["Choose audio file"].tap()
-        XCTAssertTrue(app.buttons["Cancel"].firstMatch.waitForExistence(timeout: 5)); shot("Audio file picker"); app.buttons["Cancel"].firstMatch.tap()
+        // The remote Files service can take longer to load on a fresh CI simulator.
+        XCTAssertTrue(app.buttons["Cancel"].firstMatch.waitForExistence(timeout: 20)); shot("Audio file picker"); app.buttons["Cancel"].firstMatch.tap()
         XCTAssertTrue(app.buttons["Choose audio file"].waitForExistence(timeout: 5))
         closePanel(); tab(1); XCTAssertTrue(app.buttons["photoWidget"].exists)
     }

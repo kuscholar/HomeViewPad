@@ -1,0 +1,15 @@
+{
+  "title": "Test - HomePad",
+  "result": "Failed",
+  "totalTestCount": 62,
+  "passedTests": 60,
+  "failedTests": 2,
+  "skippedTests": 0,
+  "sourceCommit": "9ac50597e88e516335407283b90aea48cbd28ec5",
+  "toolchain": "Xcode 26.6, macOS 26.6.2, iPadOS 26.5 Simulator",
+  "runURL": "https://github.com/kuscholar/HomeViewPad/actions/runs/40123033057",
+  "failures": [
+    "testSystemPickerDismissal: Cancel not found within five seconds",
+    "testWeatherAttributionLayoutWithLabeledFixture: attribution exposed as Button, not Link"
+  ]
+}
